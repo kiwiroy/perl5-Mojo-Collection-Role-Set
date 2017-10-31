@@ -1,18 +1,20 @@
 package Mojo::Collection::Role::Set;
 
-use feature 'say';
-use Mojo::Collection;
+
+use Exporter 'import';
+use Mojo::Collection 'c';
 use Role::Tiny;
+
+our @EXPORT_OK = ('set');
+
+sub set { c(@_)->with_roles(__PACKAGE__) }
 
 # self and not in alt
 sub diff {
     my ($self, $alt, $cb) = (shift, shift, shift);
 
     my %seen;
-    $alt->each(
-	sub {
-	    $seen{$cb ? $_->$cb : $_}++;
-	});
+    $alt->each(sub { $seen{$cb ? $_->$cb : $_}++; });
 
     return $self->grep(sub { not exists $seen{$_->$cb} }) if $cb;
     return $self->grep(sub { not exists $seen{$_} });
@@ -43,34 +45,7 @@ sub intersect {
     return $res;
 }
 
-# port from RSAVAGE Set::Array
-sub intersect_ {
-    my ($self, $alt, $cb) = (shift, shift, shift);
-    my $result = Mojo::Collection->new();
- 
-    my(%seen);
- 
-    $self->each(sub {
-	my ($e, $i) = @_;
-	my $ek = $cb ? $e->$cb : $e;
-
-	$alt->each(sub{
-	    my ($c, $j) = @_;
-	    my $ck = $cb ? $c->$cb : $c;
-
-	    next if (defined $seen{ $ck } && $seen{ $ck } eq $i);
-
-	    if ($ek eq $ck){
-		push @$result, $ek;
-		$seen{ $ck } = $i;
-	    }
-	});	   
-    });
-
-    return $result;
-}
-
-# symmetric diff
+# symmetric difference
 sub sym_diff {
     my ($self, $alt, $cb) = (shift, shift, shift);
     my %seen;
@@ -94,11 +69,48 @@ sub sym_diff {
     return $res;
 }
 
+# union everything - not unique
 sub union {
     my ($self, $alt) = (shift, shift);
     my $ret = $self->to_array;
     push @$ret, @$alt;
-    return $ret->uniq(@_);
+    return $ret;
 }
 
 1;
+
+=pod
+
+=head1 NAME
+
+Mojo::Collection::Role::Set - Set operations for collections
+
+=head1 DESCRIPTION
+
+A L<Role::Tiny> (role) for L<Mojo::Collection> objects to provide set operations
+L</diff>, L</duplicates>, L</intersect>, L</sym_diff> and L</union>.
+
+=head1 SYNOPSIS
+
+  # [2]
+  c(2, 3, 5, 7, 11, 13, 17)->with_roles('+Set')
+    ->interset(c(grep { ! $_ % 2 } 1 .. 20))->to_array;
+
+=head1 METHODS
+
+=head2 diff
+
+  # [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  c(1 .. 20)->with_roles('+Set')->diff(c(10 .. 30))->to_array;
+
+The values in a L<Mojo::Collection> that are not in the second one.
+
+=head2 duplicates
+
+=head2 intersect
+
+=head2 sym_diff
+
+=head2 union
+
+=cut
