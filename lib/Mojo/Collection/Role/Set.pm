@@ -96,6 +96,18 @@ L</diff>, L</duplicates>, L</intersect>, L</sym_diff> and L</union>.
   c(2, 3, 5, 7, 11, 13, 17)->with_roles('+Set')
     ->interset(c(grep { ! $_ % 2 } 1 .. 20))->to_array;
 
+=head1 EXPORTED FUNCTIONS
+
+=head2 set
+
+  # import
+  use Mojo::Collection::Role::Set 'set';
+  # [1, 2, 3, 4, 5]
+  set(1 .. 5);
+
+Like the L<Mojo::Collection> C<c()>, this is sugar for creating a collection
+with this role.
+
 =head1 METHODS
 
 =head2 diff
