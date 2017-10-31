@@ -85,6 +85,10 @@ sub union {
 
 Mojo::Collection::Role::Set - Set operations for collections
 
+=for html <a href="https://travis-ci.org/kiwiroy/perl5-Mojo-Collection-Role-Set"><img src="https://travis-ci.org/kiwiroy/perl5-Mojo-Collection-Role-Set.svg?branch=master" alt="Build Status"></a>
+
+=for html <a href="https://coveralls.io/github/kiwiroy/perl5-Mojo-Collection-Role-Set?branch=master"><img src="https://coveralls.io/repos/github/kiwiroy/perl5-Mojo-Collection-Role-Set/badge.svg?branch=master" alt="Coverage Status"></a>
+
 =head1 DESCRIPTION
 
 A L<Role::Tiny> (role) for L<Mojo::Collection> objects to provide set operations
