@@ -4,24 +4,65 @@ use feature 'say';
 use Mojo::Collection;
 use Role::Tiny;
 
-# port from RSAVAGE Set::Array
+# self and not in alt
+sub diff {
+    my ($self, $alt, $cb) = (shift, shift, shift);
+
+    my %seen;
+    $alt->each(
+	sub {
+	    $seen{$cb ? $_->$cb : $_}++;
+	});
+
+    return $self->grep(sub { not exists $seen{$_->$cb} }) if $cb;
+    return $self->grep(sub { not exists $seen{$_} });
+}
+
+sub duplicates {
+    my ($self, $cb) = (shift, shift);
+    my %seen; 
+    return $self->grep(sub { ++$seen{$_->$cb(@_)} > 1 }) if $cb;
+    return $self->grep(sub { ++$seen{$_} > 1 });
+}
+
 sub intersect {
-    my ($self, $alt, $swap) = @_;
-    ($alt, $self) = ($self, $alt) if $swap;
+    my ($self, $alt, $cb) = (shift, shift, shift);
+    my %seen;
+
+    $alt->each(
+	sub {
+	    $seen{$cb ? $_->$cb : $_}++;
+	});
+
+    my $res = $self->grep(
+	sub {
+	    # each incremented
+	    1 == $seen{$cb ? $_->$cb : $_}++;
+	});
+
+    return $res;
+}
+
+# port from RSAVAGE Set::Array
+sub intersect_ {
+    my ($self, $alt, $cb) = (shift, shift, shift);
     my $result = Mojo::Collection->new();
  
     my(%seen);
  
     $self->each(sub {
-	my ($e, $n) = @_;
+	my ($e, $i) = @_;
+	my $ek = $cb ? $e->$cb : $e;
+
 	$alt->each(sub{
-	    my ($c) = @_;
+	    my ($c, $j) = @_;
+	    my $ck = $cb ? $c->$cb : $c;
 
-	    next if (defined $seen{ $c } && $seen{ $c } eq $n);
+	    next if (defined $seen{ $ck } && $seen{ $ck } eq $i);
 
-	    if (lc $e eq lc $c){
-		push @$result, $e;
-		$seen{ $c } = $n;
+	    if ($ek eq $ck){
+		push @$result, $ek;
+		$seen{ $ck } = $i;
 	    }
 	});	   
     });
@@ -29,31 +70,35 @@ sub intersect {
     return $result;
 }
 
-sub diff {
-    my ($self, $alt, $swap) = @_;
-    ($alt, $self) = ($self, $alt) if $swap;
+# symmetric diff
+sub sym_diff {
+    my ($self, $alt, $cb) = (shift, shift, shift);
+    my %seen;
 
-    my %alt_idx;
-    @alt_idx{map { lc } @$alt} = (1) x $alt->size;
+    $alt->each(
+	sub {
+	    $seen{$cb ? $_->$cb : $_}++;
+	});
 
-    return $self->grep(sub { not exists $alt_idx{lc $_} });
+    my $res = $self->grep(
+	sub {
+	    # each did not increment
+	    0 == $seen{$cb ? $_->$cb : $_}++;
+	});
+
+    push @$res, @{ $alt->grep(
+		       sub {
+			   # first pass (each) incremented, but grep didn't
+			   1 == $seen{$cb ? $_->$cb : $_}++; 
+		       }) };
+    return $res;
 }
 
-sub sym_diff{
-    my ($self, $alt, $swap) = @_;
-    ($alt, $self) = ($self, $alt) if $swap;
- 
-    my (%count1, %count2, %count3);
-    @count1{@$self} = (1) x $self->size;
-    @count2{@$alt}  = (1) x $alt->size;
- 
-    foreach(keys %count1, keys %count2){
-	$count3{lc $_}++ 
-    }
-
-    my $res = $self->grep(sub { exists $count3{lc $_} && 1 == $count3{lc $_}});
-    push @$res, @{ $alt->grep(sub { exists $count3{lc $_} && 1 == $count3{lc $_} }) };
-    return $res;
+sub union {
+    my ($self, $alt) = (shift, shift);
+    my $ret = $self->to_array;
+    push @$ret, @$alt;
+    return $ret->uniq(@_);
 }
 
 1;
