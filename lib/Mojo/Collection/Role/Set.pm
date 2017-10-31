@@ -91,7 +91,7 @@ Mojo::Collection::Role::Set - Set operations for collections
 
 =head1 DESCRIPTION
 
-A L<Role::Tiny> (role) for L<Mojo::Collection> objects to provide set operations
+A L<role|Role::Tiny> for L<Mojo::Collection> objects to provide set operations
 L</diff>, L</duplicates>, L</intersect>, L</sym_diff> and L</union>.
 
 =head1 SYNOPSIS
