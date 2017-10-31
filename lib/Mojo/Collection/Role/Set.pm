@@ -6,6 +6,7 @@ use Mojo::Collection 'c';
 use Role::Tiny;
 
 our @EXPORT_OK = ('set');
+our $VERSION = '0.01';
 
 sub set { c(@_)->with_roles(__PACKAGE__) }
 
